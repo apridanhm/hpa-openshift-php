@@ -1,0 +1,12 @@
+{
+    "name": "poc/php-vm-db-prod",
+    "description": "Production-ready PHP app with VM database",
+    "require": {
+        "php": ">=7.4"
+    },
+    "config": {
+        "platform": {
+            "php": "8.1"
+        }
+    }
+}
