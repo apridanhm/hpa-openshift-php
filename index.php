@@ -1,42 +1,39 @@
 <?php
-// Ambil dari environment variables (dari Secret)
-$host = getenv('DB_HOST');
-$user = getenv('DB_USER');
-$pass = getenv('DB_PASS');
-$db   = getenv('DB_NAME');
+// Helper function: baca secret dari file mount
+function get_db_cred($key, $secret_path = '/etc/secrets/db/') {
+    $file = $secret_path . $key;
+    if (file_exists($file)) {
+        return trim(file_get_contents($file));
+    }
+    return ''; // Fallback kosong kalau file nggak ada
+}
+
+$host = get_db_cred('DB_HOST');
+$port = get_db_cred('DB_PORT') ?: '3306'; // Default 3306 kalau nggak ada file
+$user = get_db_cred('DB_USER');
+$pass = get_db_cred('DB_PASS');
+$db   = get_db_cred('DB_NAME');
+
+// Debug (hapus nanti)
+echo "<pre>DB_HOST: $host | DB_USER: $user | DB_NAME: $db</pre>";
 
 if (!$host || !$user || !$pass || !$db) {
-    die("ERROR: Database credentials not configured. Check environment variables.");
+    die("ERROR: Database credentials missing in /etc/secrets/db/");
 }
 
 try {
     $pdo = new PDO(
-        "mysql:host=$host;dbname=$db;charset=utf8mb4",
+        "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4",
         $user,
         $pass,
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
-        ]
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
+    echo " Database Connected Successfully!";
 } catch(PDOException $e) {
-    error_log("DB Connection Error: " . $e->getMessage());
-    die("Database connection failed. Please check logs.");
+    die(" DB Error: " . $e->getMessage());
 }
-
-// Handle form submit
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['name'])) {
-    $stmt = $pdo->prepare("INSERT INTO visitors (ip_address, user_agent) VALUES (?, ?)");
-    $stmt->execute([$_SERVER['REMOTE_ADDR'], $_SERVER['HTTP_USER_AGENT']]);
-    header("Location: /");
-    exit;
-}
-
-// Fetch data
-$stmt = $pdo->query("SELECT * FROM visitors ORDER BY visit_time DESC LIMIT 20");
-$visitors = $stmt->fetchAll();
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
