@@ -104,7 +104,7 @@ $hostname = gethostname();
     <div class="header">
       <div>
         <h1> PHP-FPM Visitor Tracker</h1>
-        <p>Apache + PHP-FPM + OpenShift S2I</p>
+        <p>PHP-FPM + Percona XtraDB Cluster</p>
       </div>
       <div class="badge">AUTO-LOGGING ACTIVE</div>
     </div>
